@@ -1,15 +1,7 @@
 # mass
 mass是一个通过ssh批量执行命令的工具
 
-# 使用方法
-var fIP = flag.String("ip", "", "ip list file")
-var fCommand = flag.String("cmd", "", "command file")
-var fPassword = flag.String("p", "", "password file")
-var fConcurrency = flag.Int("c", 10, "concurrency number")
-
-var fHead = flag.Int("head", -1, "head")
-var fTail = flag.Int("tail", -1, "tail")
-
+## 使用方法
 mass 
 -ip   要执行命令的服务器ip列表文件  
 -cmd  写有执行命令的文件
