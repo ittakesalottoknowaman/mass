@@ -1,5 +1,5 @@
 # mass
-mass是一个通过ssh批量执行命令的工具
+mass是一个通过sshpass批量执行命令的工具
 
 ## 使用方法
 mass   
