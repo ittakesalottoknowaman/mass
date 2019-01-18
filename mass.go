@@ -11,10 +11,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"utils/file"
-	"utils/sys"
+	"mass/utils/file"
+	"mass/utils/sys"
 
-	log "github.com/cihub/seelog"
+	"github.com/cihub/seelog"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -135,12 +135,12 @@ func (m *manager) execute(ip string) {
 			if err.Error() == "exit status 5" {
 				continue
 			}
-			log.Info(fmt.Sprintf("IP:%s\nERROR:%s %s", ip, err, str))
+			seelog.Info(fmt.Sprintf("IP:%s\nERROR:%s %s", ip, err, str))
 			m.executeErrorIP = append(m.executeErrorIP, ip)
 			return
 		}
 
-		log.Info(fmt.Sprintf("IP:%s\nOUTPUT:%s", ip, str))
+		seelog.Info(fmt.Sprintf("IP:%s\nOUTPUT:%s", ip, str))
 		m.executeSuccessIP = append(m.executeSuccessIP, ip)
 		return
 	}
@@ -190,14 +190,14 @@ func parsePassword() ([]string, error) {
 }
 
 func initLoggger() {
-	defer log.Flush()
-	logger, err := log.LoggerFromConfigAsBytes([]byte(logConfig))
+	defer seelog.Flush()
+	logger, err := seelog.LoggerFromConfigAsBytes([]byte(logConfig))
 
 	if err != nil {
 		panic(fmt.Sprintf("Error during config creation: %s", err.Error()))
 	}
 
-	log.ReplaceLogger(logger)
+	seelog.ReplaceLogger(logger)
 }
 
 func main() {
