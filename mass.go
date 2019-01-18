@@ -26,8 +26,8 @@ var fConcurrency = flag.Int("c", 10, "concurrency number")
 var fHead = flag.Int("head", -1, "head")
 var fTail = flag.Int("tail", -1, "tail")
 
-var shellPath = "/export/autoinstall/bin/lyq_script/mass/.shell"
-var resultPath = "/export/autoinstall/bin/lyq_script/mass/result"
+var shellPath = "./.shell"
+var resultPath = "./result"
 var sshPort = []string{"51899", "22"}
 
 var logConfig = `
