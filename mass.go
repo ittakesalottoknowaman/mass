@@ -18,13 +18,13 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-var fIP = flag.String("ip", "", "ip list file")
-var fCommand = flag.String("cmd", "", "command file")
-var fPassword = flag.String("p", "", "password file")
-var fConcurrency = flag.Int("c", 10, "concurrency number")
+var fIP = *flag.String("ip", "", "ip list file")
+var fCommand = *flag.String("cmd", "", "command file")
+var fPassword = *flag.String("p", "", "password file")
+var fConcurrency = *flag.Int("c", 10, "concurrency number")
 
-var fHead = flag.Int("head", -1, "head")
-var fTail = flag.Int("tail", -1, "tail")
+var fHead = *flag.Int("head", -1, "head")
+var fTail = *flag.Int("tail", -1, "tail")
 
 var shellPath = "./.shell"
 var resultPath = "./result"
@@ -63,7 +63,7 @@ func new() *manager {
 		executeSuccessIP:   make([]string, 0, 100),
 		executeErrorIP:     make([]string, 0, 100),
 		loginFailIP:        make([]string, 0, 100),
-		concurrencyChannel: make(chan struct{}, *fConcurrency),
+		concurrencyChannel: make(chan struct{}, fConcurrency),
 	}
 }
 
@@ -86,7 +86,7 @@ func (m *manager) run() {
 	m.totalNumber = int32(len(m.ipList))
 
 	// 解析执行的命令
-	m.command, err = file.ToTrimString(*fCommand)
+	m.command, err = file.ToTrimString(fCommand)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -159,7 +159,7 @@ func scanPort(ip string) (string, error) {
 }
 
 func parseIP() ([]string, error) {
-	str, err := file.ToTrimString(*fIP)
+	str, err := file.ToTrimString(fIP)
 	if err != nil {
 		return nil, err
 	}
@@ -168,21 +168,21 @@ func parseIP() ([]string, error) {
 	ipList := strings.Split(str, "\n")
 
 	switch {
-	case *fHead > len(ipList) || *fTail > len(ipList) || *fHead > *fTail:
+	case fHead > len(ipList) || fTail > len(ipList) || fHead > fTail:
 		return nil, fmt.Errorf("head or tail input error")
-	case *fHead != -1 && *fTail != -1:
-		return ipList[*fHead-1 : *fTail], nil
-	case *fHead != -1:
-		return ipList[*fHead-1:], nil
-	case *fTail != -1:
-		return ipList[:*fTail], nil
+	case fHead != -1 && fTail != -1:
+		return ipList[fHead-1 : fTail], nil
+	case fHead != -1:
+		return ipList[fHead-1:], nil
+	case fTail != -1:
+		return ipList[:fTail], nil
 	default:
 		return ipList, nil
 	}
 }
 
 func parsePassword() ([]string, error) {
-	str, err := file.ToTrimString(*fPassword)
+	str, err := file.ToTrimString(fPassword)
 	if err != nil {
 		return []string{}, err
 	}
