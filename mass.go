@@ -20,7 +20,7 @@ import (
 
 var fIP = *flag.String("ip", "", "ip list file")
 var fCommand = *flag.String("cmd", "", "command file")
-var fPassword = *flag.String("p", "", "password file")
+var fPassword = *flag.String("password", "", "password file")
 var fConcurrency = *flag.Int("c", 10, "concurrency number")
 var fPort = *flag.String("port", "22,51899", "ssh port")
 
