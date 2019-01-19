@@ -22,7 +22,7 @@ var fIP = *flag.String("ip", "", "ip list file")
 var fCommand = *flag.String("cmd", "", "command file")
 var fPassword = *flag.String("password", "", "password file")
 var fConcurrency = *flag.Int("c", 10, "concurrency number")
-var fPort = *flag.String("port", "22,51899", "ssh port")
+var fPort = *flag.String("port", "22", "ssh port")
 
 var fHead = *flag.Int("head", -1, "head")
 var fTail = *flag.Int("tail", -1, "tail")
