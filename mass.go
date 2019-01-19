@@ -22,13 +22,13 @@ var fIP = *flag.String("ip", "", "ip list file")
 var fCommand = *flag.String("cmd", "", "command file")
 var fPassword = *flag.String("p", "", "password file")
 var fConcurrency = *flag.Int("c", 10, "concurrency number")
+var fPort = *flag.String("port", "22,51899", "ssh port")
 
 var fHead = *flag.Int("head", -1, "head")
 var fTail = *flag.Int("tail", -1, "tail")
 
 var shellPath = "./.shell"
 var resultPath = "./result"
-var sshPort = []string{"51899", "22"}
 
 var logConfig = `
 <seelog minlevel="info">
@@ -45,6 +45,7 @@ var id = fmt.Sprintf("%s", uuid.Must(uuid.NewV4()))
 
 type manager struct {
 	command            string
+	port               []string
 	ipList             []string
 	executeSuccessIP   []string
 	executeErrorIP     []string
@@ -59,6 +60,7 @@ type manager struct {
 func new() *manager {
 	return &manager{
 		wg:                 sync.WaitGroup{},
+		port:               make([]string, 0, 2),
 		ipList:             make([]string, 0, 100),
 		executeSuccessIP:   make([]string, 0, 100),
 		executeErrorIP:     make([]string, 0, 100),
@@ -92,6 +94,8 @@ func (m *manager) run() {
 		return
 	}
 
+	m.port = strings.Split(fPort, ",")
+
 	for _, ip := range m.ipList {
 		m.concurrencyChannel <- struct{}{}
 		m.wg.Add(1)
@@ -120,7 +124,7 @@ func (m *manager) execute(ip string) {
 	shell := fmt.Sprintf("%s/%s/%s-%d", shellPath, id, ip, time.Now().UnixNano())
 	defer os.Remove(shell)
 
-	port, err := scanPort(ip)
+	port, err := m.scanPort(ip)
 	if err != nil {
 		m.loginFailIP = append(m.loginFailIP, ip)
 		return
@@ -147,8 +151,8 @@ func (m *manager) execute(ip string) {
 	m.loginFailIP = append(m.loginFailIP, ip)
 }
 
-func scanPort(ip string) (string, error) {
-	for _, port := range sshPort {
+func (m *manager) scanPort(ip string) (string, error) {
+	for _, port := range m.port {
 		_, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%s", ip, port), 3*time.Second)
 		if err != nil {
 			continue
