@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func ToTrimString(filePath string) (string, error) {
+func ToString(filePath string) (string, error) {
 	b, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return "", err

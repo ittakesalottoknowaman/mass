@@ -88,7 +88,7 @@ func (m *manager) run() {
 	m.totalNumber = int32(len(m.ipList))
 
 	// 解析执行的命令
-	m.command, err = file.ToTrimString(fCommand)
+	m.command, err = file.ToString(fCommand)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -163,7 +163,7 @@ func (m *manager) scanPort(ip string) (string, error) {
 }
 
 func parseIP() ([]string, error) {
-	str, err := file.ToTrimString(fIP)
+	str, err := file.ToString(fIP)
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +186,7 @@ func parseIP() ([]string, error) {
 }
 
 func parsePassword() ([]string, error) {
-	str, err := file.ToTrimString(fPassword)
+	str, err := file.ToString(fPassword)
 	if err != nil {
 		return []string{}, err
 	}
