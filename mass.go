@@ -17,16 +17,16 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-var fConfig = *flag.String("config", "config.yaml", "config file")
+var fConfig = flag.String("config", "config.yaml", "config file")
 
-var fIP = *flag.String("ip", "", "ip list file")
-var fCommand = *flag.String("cmd", "", "command file")
-var fConcurrency = *flag.Int("c", 10, "concurrency number")
-var fPort = *flag.String("port", "22", "ssh port")
-var fTimeout = *flag.Int("timeout", 3, "timeout")
+var fIP = flag.String("ip", "", "ip list file")
+var fCommand = flag.String("cmd", "", "command file")
+var fConcurrency = flag.Int("c", 10, "concurrency number")
+var fPort = flag.String("port", "22", "ssh port")
+var fTimeout = flag.Int("timeout", 3, "timeout")
 
-var fHead = *flag.Int("head", -1, "head")
-var fTail = *flag.Int("tail", -1, "tail")
+var fHead = flag.Int("head", -1, "head")
+var fTail = flag.Int("tail", -1, "tail")
 
 type manager struct {
 	id                 string
@@ -45,7 +45,7 @@ type manager struct {
 }
 
 func new() *manager {
-	c, err := props.ParseConfig(fConfig)
+	c, err := props.ParseConfig(*fConfig)
 	if err != nil {
 
 	}
@@ -59,7 +59,7 @@ func new() *manager {
 		executeSuccessIP:   make([]string, 0, 100),
 		executeErrorIP:     make([]string, 0, 100),
 		loginFailIP:        make([]string, 0, 100),
-		concurrencyChannel: make(chan struct{}, fConcurrency),
+		concurrencyChannel: make(chan struct{}, *fConcurrency),
 	}
 }
 
@@ -76,13 +76,13 @@ func (m *manager) run() {
 	m.totalNumber = int32(len(m.ipList))
 
 	// 解析执行的命令
-	m.command, err = file.ToString(fCommand)
+	m.command, err = file.ToString(*fCommand)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	m.port = strings.Split(fPort, ",")
+	m.port = strings.Split(*fPort, ",")
 
 	for _, ip := range m.ipList {
 		m.concurrencyChannel <- struct{}{}
@@ -117,11 +117,11 @@ func (m *manager) execute(ip string) {
 	}
 
 	for _, auth := range m.config.Auth {
-		session, err := session.New(ip, port, auth.User, auth.Password, auth.PrivateKey, fTimeout)
+		session, err := session.New(ip, port, auth.User, auth.Password, auth.PrivateKey, *fTimeout)
 		if err != nil {
 			continue
 		}
-		session.Run(fCommand)
+		session.Run(m.command)
 	}
 }
 
@@ -137,7 +137,7 @@ func (m *manager) scanPort(ip string) (string, error) {
 }
 
 func parseIP() ([]string, error) {
-	str, err := file.ToString(fIP)
+	str, err := file.ToString(*fIP)
 	if err != nil {
 		return nil, err
 	}
@@ -146,14 +146,14 @@ func parseIP() ([]string, error) {
 	ipList := strings.Split(str, "\n")
 
 	switch {
-	case fHead > len(ipList) || fTail > len(ipList) || fHead > fTail:
+	case *fHead > len(ipList) || *fTail > len(ipList) || *fHead > *fTail:
 		return nil, fmt.Errorf("head or tail input error")
-	case fHead != -1 && fTail != -1:
-		return ipList[fHead-1 : fTail], nil
-	case fHead != -1:
-		return ipList[fHead-1:], nil
-	case fTail != -1:
-		return ipList[:fTail], nil
+	case *fHead != -1 && *fTail != -1:
+		return ipList[*fHead-1 : *fTail], nil
+	case *fHead != -1:
+		return ipList[*fHead-1:], nil
+	case *fTail != -1:
+		return ipList[:*fTail], nil
 	default:
 		return ipList, nil
 	}

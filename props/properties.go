@@ -1,8 +1,6 @@
 package props
 
 import (
-	"fmt"
-
 	"mass/utils/file"
 
 	yaml "gopkg.in/yaml.v2"
@@ -18,19 +16,15 @@ type Config struct {
 }
 
 func ParseConfig(config string) (*Config, error) {
-	if config == "" {
-		return nil, fmt.Errorf("")
-	}
-
 	b, err := file.ToBytes(config)
 	if err != nil {
-		return nil, fmt.Errorf("")
+		return nil, err
 	}
 
 	c := new(Config)
 	err = yaml.Unmarshal(b, c)
 	if err != nil {
-		return nil, fmt.Errorf("")
+		return nil, err
 	}
 
 	return c, nil

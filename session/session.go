@@ -1,6 +1,7 @@
 package session
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -15,6 +16,11 @@ import (
 2.有密码 有key
 3.无密码 有key
 */
+
+type sshSession struct {
+	ip      string
+	session *ssh.Session
+}
 
 func getAuthMethod(key, password string) ([]ssh.AuthMethod, error) {
 	if key == "" {
@@ -41,7 +47,17 @@ func getAuthMethod(key, password string) ([]ssh.AuthMethod, error) {
 	return []ssh.AuthMethod{ssh.PublicKeys(signer)}, nil
 }
 
-func New(ip, port, username, password, key string, timeout int) (*ssh.Session, error) {
+func (s *sshSession) Run(command string) error {
+	var stdoutBuf bytes.Buffer
+	var stderrBuf bytes.Buffer
+	s.session.Stdout = &stdoutBuf
+	s.session.Stderr = &stderrBuf
+	err := s.session.Run(command)
+	fmt.Printf("out:%s err:%s", stdoutBuf.String(), stderrBuf.String())
+	return err
+}
+
+func New(ip, port, username, password, key string, timeout int) (*sshSession, error) {
 	authMethod, err := getAuthMethod(key, password)
 	if err != nil {
 		return nil, err
@@ -75,5 +91,8 @@ func New(ip, port, username, password, key string, timeout int) (*ssh.Session, e
 	if err := session.RequestPty("xterm", 80, 40, modes); err != nil {
 		return nil, err
 	}
-	return session, nil
+	return &sshSession{
+		ip:      ip,
+		session: session,
+	}, nil
 }
