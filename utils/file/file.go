@@ -7,6 +7,10 @@ import (
 	"strings"
 )
 
+func ToBytes(filePath string) ([]byte, error) {
+	return ioutil.ReadFile(filePath)
+}
+
 func ToString(filePath string) (string, error) {
 	b, err := ioutil.ReadFile(filePath)
 	if err != nil {

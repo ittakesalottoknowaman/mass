@@ -11,6 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"mass/props"
 	"mass/utils/file"
 	"mass/utils/sys"
 
@@ -18,32 +19,19 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+var fConfig = *flag.String("config", "config.yaml", "config file")
+
 var fIP = *flag.String("ip", "", "ip list file")
 var fCommand = *flag.String("cmd", "", "command file")
-var fPassword = *flag.String("password", "", "password file")
 var fConcurrency = *flag.Int("c", 10, "concurrency number")
 var fPort = *flag.String("port", "22", "ssh port")
 
 var fHead = *flag.Int("head", -1, "head")
 var fTail = *flag.Int("tail", -1, "tail")
 
-var shellPath = "./.shell"
-var resultPath = "./result"
-
-var logConfig = `
-<seelog minlevel="info">
-    <outputs>
-        <file path="` + filepath.Join(resultPath, id, "log") + `" formatid="common"/>
-    </outputs>
-    <formats>
-	    <format id="common" format="%Msg%n"/>
-    </formats>
-</seelog>
-`
-
-var id = fmt.Sprintf("%s", uuid.Must(uuid.NewV4()))
-
 type manager struct {
+	id                 string
+	config             *props.Config
 	command            string
 	port               []string
 	ipList             []string
@@ -58,8 +46,15 @@ type manager struct {
 }
 
 func new() *manager {
+	c, err := props.ParseConfig(fConfig)
+	if err != nil {
+
+	}
+
 	return &manager{
+		id:                 fmt.Sprintf("%s", uuid.Must(uuid.NewV4())),
 		wg:                 sync.WaitGroup{},
+		config:             c,
 		port:               make([]string, 0, 2),
 		ipList:             make([]string, 0, 100),
 		executeSuccessIP:   make([]string, 0, 100),
@@ -72,12 +67,6 @@ func new() *manager {
 func (m *manager) run() {
 	var err error
 
-	// 解析密码文件
-	m.passwordList, err = parsePassword()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
 	// 解析待执行ip列表
 	m.ipList, err = parseIP()
 	if err != nil {
@@ -111,9 +100,9 @@ func (m *manager) run() {
 }
 
 func (m *manager) writeResult() {
-	file.WriteString(filepath.Join(resultPath, id, "exec_success_ip"), strings.Join(m.executeSuccessIP, "\n"))
-	file.WriteString(filepath.Join(resultPath, id, "exec_error_ip"), strings.Join(m.executeErrorIP, "\n"))
-	file.WriteString(filepath.Join(resultPath, id, "login_fail_ip"), strings.Join(m.loginFailIP, "\n"))
+	file.WriteString(filepath.Join(m.config.ResultPath, m.id, "exec_success_ip"), strings.Join(m.executeSuccessIP, "\n"))
+	file.WriteString(filepath.Join(m.config.ResultPath, m.id, "exec_error_ip"), strings.Join(m.executeErrorIP, "\n"))
+	file.WriteString(filepath.Join(m.config.ResultPath, m.id, "login_fail_ip"), strings.Join(m.loginFailIP, "\n"))
 }
 
 func (m *manager) execute(ip string) {
@@ -121,7 +110,7 @@ func (m *manager) execute(ip string) {
 		<-m.concurrencyChannel
 		m.wg.Done()
 	}()
-	shell := fmt.Sprintf("%s/%s/%s-%d", shellPath, id, ip, time.Now().UnixNano())
+	shell := fmt.Sprintf("%s/%s/%s-%d", m.config.ResultPath, m.id, ip, time.Now().UnixNano())
 	defer os.Remove(shell)
 
 	port, err := m.scanPort(ip)
@@ -185,29 +174,8 @@ func parseIP() ([]string, error) {
 	}
 }
 
-func parsePassword() ([]string, error) {
-	str, err := file.ToString(fPassword)
-	if err != nil {
-		return []string{}, err
-	}
-	return strings.Split(str, "\n"), nil
-}
-
-func initLoggger() {
-	defer seelog.Flush()
-	logger, err := seelog.LoggerFromConfigAsBytes([]byte(logConfig))
-
-	if err != nil {
-		panic(fmt.Sprintf("Error during config creation: %s", err.Error()))
-	}
-
-	seelog.ReplaceLogger(logger)
-}
-
 func main() {
-	initLoggger()
 	flag.Parse()
-	fmt.Println(id)
 	m := new()
 	m.run()
 }
