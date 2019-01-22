@@ -41,7 +41,7 @@ func getAuthMethod(key, password string) ([]ssh.AuthMethod, error) {
 	return []ssh.AuthMethod{ssh.PublicKeys(signer)}, nil
 }
 
-func new(ip, port, username, password, key string, timeout int) (*ssh.Session, error) {
+func New(ip, port, username, password, key string, timeout int) (*ssh.Session, error) {
 	authMethod, err := getAuthMethod(key, password)
 	if err != nil {
 		return nil, err

@@ -10,7 +10,7 @@ import (
 
 type Config struct {
 	ResultPath string `yaml:"result_path"`
-	Auth       *struct {
+	Auth       []*struct {
 		User       string `yaml:"user"`
 		Password   string `yaml:"password"`
 		PrivateKey string `yaml:"private_key"`

@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"mass/session"
 	"net"
-	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -13,9 +13,7 @@ import (
 
 	"mass/props"
 	"mass/utils/file"
-	"mass/utils/sys"
 
-	"github.com/cihub/seelog"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -25,6 +23,7 @@ var fIP = *flag.String("ip", "", "ip list file")
 var fCommand = *flag.String("cmd", "", "command file")
 var fConcurrency = *flag.Int("c", 10, "concurrency number")
 var fPort = *flag.String("port", "22", "ssh port")
+var fTimeout = *flag.Int("timeout", 3, "timeout")
 
 var fHead = *flag.Int("head", -1, "head")
 var fTail = *flag.Int("tail", -1, "tail")
@@ -110,8 +109,6 @@ func (m *manager) execute(ip string) {
 		<-m.concurrencyChannel
 		m.wg.Done()
 	}()
-	shell := fmt.Sprintf("%s/%s/%s-%d", m.config.ResultPath, m.id, ip, time.Now().UnixNano())
-	defer os.Remove(shell)
 
 	port, err := m.scanPort(ip)
 	if err != nil {
@@ -119,25 +116,13 @@ func (m *manager) execute(ip string) {
 		return
 	}
 
-	for _, password := range m.passwordList {
-		c := fmt.Sprintf("sshpass -p '%s' ssh -tt -p %s sa@%s \"%s\"", password, port, ip, m.command)
-		file.WriteString(shell, c)
-
-		str, err := sys.CmdOut("sh", shell)
+	for _, auth := range m.config.Auth {
+		session, err := session.New(ip, port, auth.User, auth.Password, auth.PrivateKey, fTimeout)
 		if err != nil {
-			if err.Error() == "exit status 5" {
-				continue
-			}
-			seelog.Info(fmt.Sprintf("IP:%s\nERROR:%s %s", ip, err, str))
-			m.executeErrorIP = append(m.executeErrorIP, ip)
-			return
+			continue
 		}
-
-		seelog.Info(fmt.Sprintf("IP:%s\nOUTPUT:%s", ip, str))
-		m.executeSuccessIP = append(m.executeSuccessIP, ip)
-		return
+		session.Run(fCommand)
 	}
-	m.loginFailIP = append(m.loginFailIP, ip)
 }
 
 func (m *manager) scanPort(ip string) (string, error) {
